@@ -2,6 +2,8 @@
 
 ## 4. Median of Two Sorted Arrays
 
+[Problem link](https://leetcode.com/problems/median-of-two-sorted-arrays)
+
 ```js
 const findMedianSortedArrays = function(nums1, nums2) {
     const len = nums1.length + nums2.length;
@@ -38,6 +40,8 @@ Time Complexity = O(M + N)
 Space Complexity = O(1)
 
 ## 5. Longest Palindromic Substring
+
+[Problem link](https://leetcode.com/problems/longest-palindromic-substring)
 
 ```js
 const expandFromCentre = (s, left, right) => {
@@ -93,6 +97,215 @@ const convert = function(s, numRows) {
         if (mapRows.has(i)) res += mapRows.get(i).join("");
     }
     return res
+};
+```
+
+## 7. Reverse Integer
+
+[Problem link](https://leetcode.com/problems/reverse-integer)
+
+```js
+const reverse = function(x) {
+    let res = parseInt(x.toString().split("").reverse().join(""));
+    if (res > 2**31 - 1) return 0;
+    return x > 0 ? res : -1 * res;
+};
+```
+
+## 42. Trapping Rain Water
+
+[Problem link](https://leetcode.com/problems/trapping-rain-water)
+
+### Two Pointer
+
+```js
+const trap = function(height) {
+  let capacity = 0;
+  let left_max = 0;
+  let right_max = 0;
+  let left = 0;
+  let right = height.length - 1;
+  while (right > left) {
+    if (height[left] < height[right]) {
+      height[left] >= left_max ? left_max = height[left] : capacity += (left_max - height[left])
+      left++;
+    } else {
+      height[right] >= right_max ? right_max = height[right] : capacity += (right_max - height[right])
+      right--;
+    }
+  }
+  return capacity;
+};
+```
+
+### Dynamic Programming
+
+```js
+const trap = (height) => {
+  let size = height.length;
+  if(size === 0) return 0;
+  let left = Array(size).fill(0);
+  let right = Array(size).fill(0);
+  left[0] = height[0];
+  right[size - 1] = height[size - 1];
+  for (let i = 1; i < size; i++) {
+    left[i] = Math.max(height[i], left[i - 1]);
+  }
+  for (let i = size - 2; i >= 0; i--) {
+    right[i] = Math.max(height[i], right[i + 1]);
+  }
+  let res = 0;
+  for (let i = 0; i < size ; i++) {
+    res += Math.min(left[i], right[i]) - height[i];
+  }
+  return res;
+};
+```
+
+## 56. Merge Intervals
+
+[Problem link](https://leetcode.com/problems/merge-intervals)
+
+```js
+const merge = (intervals) => {
+  intervals.sort((a, b) => a[0] - b[0])
+
+  const res = [intervals[0]];
+  for (let i = 1; i < intervals.length; i++){
+    const last = res[res.length - 1];
+    const curr = intervals[i];
+    curr[0] > last[1] ? res.push(curr) : last[1] = Math.max(curr[1], last[1])
+  }
+  return res
+};
+```
+
+## 94. Binary Tree Inorder Traversal
+
+[Problem link](https://leetcode.com/problems/binary-tree-inorder-traversal)
+
+```js
+var inorderTraversal = function(root, ans = []) {
+  if (!root) return ans;
+  
+  inorderTraversal(root.left, ans);
+  ans.push(root.val);
+  inorderTraversal(root.right, ans);
+  
+  return ans;
+};
+```
+
+Time Complexity - O(N);
+Space Complexity - O(1);
+
+## 200. Number of Islands
+
+[Problem link](https://leetcode.com/problems/number-of-islands)
+
+```js
+const dfs = (grid, row, col) => {
+  if (row < 0 || row >= grid.length || col < 0 || col >= grid[0].length) {
+      return
+  }
+  if (grid[row][col] === "0") return;
+  
+  grid[row][col] = "0";
+  [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([x, y]) => {
+    dfs(grid, row + x, col + y)
+  })
+}
+
+const numIslands = function(grid) {
+  let numIslands = 0;
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[0].length; col++) {
+      if (grid[row][col] === "1") {
+        numIslands++;
+        dfs(grid, row, col);
+      }
+    }
+  }
+  return numIslands;
+};
+```
+
+## 298. Binary Tree Longest Consecutive Sequence
+
+[Problem link](https://leetcode.com/problems/binary-tree-longest-consecutive-sequence)
+
+```js
+const longestConsecutive = function(root) {
+    
+  const traverse = (root, prev, length) => {
+    if (!root) return length;
+    length = root.val - prev === 1 ? length + 1 : 1;
+    return Math.max(length, traverse(root.left, root.val, length), traverse(root.right,root.val, length));
+  }
+  return traverse(root, root.val, 1);
+};
+```
+
+## 429 N-ary Tree Level Order Traversal
+
+[Problem link](https://leetcode.com/problems/n-ary-tree-level-order-traversal)
+
+```js
+const levelOrder = function(root) {
+  if (!root) return [];
+  const queue = [];
+  const res = [];
+  queue.push(root);
+  while (queue.length > 0) {
+    const length = queue.length;
+    const thisRes = [];
+    for (let i=0; i<length; i++) {
+      const node = queue.shift();
+      thisRes.push(node.val);
+      for (let child of node.children) {
+        queue.push(child);
+      }
+    }
+    res.push(thisRes);
+  }
+  return res;
+};
+```
+
+## 606. Construct String from Binary Tree
+
+[Problem link](https://leetcode.com/problems/construct-string-from-binary-tree)
+
+```js
+var tree2str = function(root) {
+  if (!root) return '';
+  const left2str = tree2str(root.left);
+  const right2str = tree2str(root.right);
+  
+  let tail = '';
+  if (right2str !== '') {
+    tail = `(${left2str})(${right2str})`
+  } else if (left2str !== '') {
+    tail = `(${left2str})`
+  } 
+  return String(root.val) + tail;
+};
+```
+
+## 814. Binary Tree Pruning
+
+[Problem link](https://leetcode.com/problems/binary-tree-pruning)
+
+```js
+const pruneTree = function(root) {
+    
+  const hasZero = (root) => {
+    if (!root) return true;
+    if (root.val === 0 && hasZero(root.left) && hasZero(root.right)) return true;
+    if (hasZero(root.left)) root.left = null;
+    if (hasZero(root.right)) root.right = null;
+  }
+  return hasZero(root) ? null : root;
 };
 ```
 
