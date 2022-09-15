@@ -111,6 +111,64 @@ const reverse = function(x) {
 };
 ```
 
+## 8. String to Integer (atoi)
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/string-to-integer-atoi)
+
+```js
+var myAtoi = function(s) {
+  let num = Number.isNaN(parseInt(s)) ? 0 : parseInt(s);
+  return num < -1 * 2**31 ? -1 * 2**31 : num > 2**31 - 1 ? 2**31 - 1 : num;
+};
+```
+
+## 11. Container With Most Water
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/container-with-most-water)
+
+### Two Pointer
+
+```js
+const maxArea = function(height) {
+  let maxArea = 0;
+  let left = 0;
+  let right = height.length - 1;
+  
+  while (left < right) {
+    const area = Math.min(height[left], height[right]) * (right - left);
+    maxArea = Math.max(maxArea, area);
+    if (height[left] <= height[right]) {
+      left++;
+    } else {
+      right--;
+    }
+  }
+  return maxArea;
+};
+```
+
+## 14. Longest Common Prefix
+
+```js
+const commonPrefix = (str1, str2) => {
+  let len = Math.min(str1.length, str2.length);
+  for (let i = 0; i < len; i++) {
+    if (str1[i] !== str2[i]) {
+      len = i;
+      break;
+    }
+  }
+  return str1.slice(0, len);
+}
+
+const longestCommonPrefix = function(strs) {
+  return strs.reduce((prev, curr, index) => {
+    if (index === 0) return curr;
+    return commonPrefix(prev, curr);
+  }, '')
+};
+```
+
 ## 42. Trapping Rain Water
 
 [Problem link](https://leetcode.com/problems/trapping-rain-water)
@@ -242,6 +300,27 @@ const longestConsecutive = function(root) {
     return Math.max(length, traverse(root.left, root.val, length), traverse(root.right,root.val, length));
   }
   return traverse(root, root.val, 1);
+};
+```
+
+## 362. Design Hit Counter
+
+[Problem link (**MEDIUM**)](https://leetcode.com/problems/design-hit-counter)
+
+```js
+class HitCounter {
+  constructor() {
+    this.hits = [];
+  }
+  hit(timestamp) {
+    this.hits.push(timestamp);
+  }
+  getHits(timestamp) {
+    while(this.hits.length !== 0 && this.hits[0] <= timestamp - 300) {
+      this.hits.shift();
+    }
+    return this.hits.length;
+  }
 };
 ```
 
@@ -381,6 +460,44 @@ const verticalTraversal = function(root) {
 };
 ```
 
+## 1383. Maximum Performance of a Team
+
+[Problem link (**HARD**)](https://leetcode.com/problems/maximum-performance-of-a-team)
+
+```js
+const insertWindow = (num, window) => {
+  let index = window.length;
+  for (let i = 0; i < window.length; i++) {
+    if (window[i] >= num) {
+      index = i;
+      break;
+    }
+  }
+  window.splice(index, 0, num);
+}
+
+const maxPerformance = function(n, speed, efficiency, k) {
+  const modulo = BigInt(10 ** 9 + 7);
+  let maxP = BigInt(0);
+  let speed_sum = BigInt(0);
+  let speed_window = [];
+  const EandS = efficiency.map((e, i) => [e, speed[i]]).sort((a, b) => b[0] - a[0]);
+  
+  for (let [e, s] of EandS) {
+    maxP = BigInt(e) * (speed_sum + BigInt(s)) > maxP ? BigInt(e) * (speed_sum + BigInt(s)) : maxP;
+    
+    if (speed_window.length < k - 1) {
+      speed_sum += BigInt(s);
+      insertWindow(s, speed_window);
+    } else if (speed_window[0] < s) {        
+      speed_sum = speed_sum - BigInt(speed_window.shift()) + BigInt(s);
+      insertWindow(s, speed_window);      
+    }
+  }
+  return maxP % modulo;
+};
+```
+
 ## 1448. Count Good Nodes in Binary Tree
 
 [Problem link](https://leetcode.com/problems/count-good-nodes-in-binary-tree)
@@ -406,3 +523,447 @@ const goodNodes = (root) => {
 
 Time Complexity = O(N)
 Space Complexity = O(N)
+
+## 1457. Pseudo-Palindromic Paths in a Binary Tree
+
+### DFS
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/pseudo-palindromic-paths-in-a-binary-tree)
+
+```js
+const triggleSet = (val, set) => set.has(val) ? set.delete(val) : set.add(val);
+
+const traverse = (root, nums, res) => {
+  if (!root) return;
+  
+  triggleSet(root.val,nums);  
+  if (!root.left && !root.right && nums.size < 2) res[0] = res[0] + 1;     
+  traverse(root.left, nums, res);
+  traverse(root.right, nums, res);  
+  triggleSet(root.val,nums);
+}
+
+const pseudoPalindromicPaths  = function(root) {
+
+  const nums = new Set();
+  const res = [0];
+  traverse(root, nums, res);
+  return res[0];
+};
+```
+
+## 2007. Find Original Array From Doubled Array
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/find-original-array-from-doubled-array)
+
+```js
+const findOriginalArray = function(changed) {
+  const len = changed.length;
+  if (len % 2 === 1) return [];
+  const res = [];
+  changed.sort((a, b) => a - b);
+  const doubled = [];
+  
+  while (changed.length !== 0) {
+    const num = changed.pop();
+    if (doubled[0] === num * 2) {
+      doubled.shift();
+      res.push(num);
+    } else {
+      doubled.push(num);
+    }
+  }
+  return res.length === len / 2 ? res : [];
+};
+```
+
+## 78. Subsets
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/subsets)
+
+```js
+const subsets = function(nums) {
+  const res = [];
+  const track = [];
+  
+  const backtrack = (start) => {
+    res.push([...track]);
+    for (let i = start; i < nums.length; i++) {
+      track.push(nums[i]);
+      backtrack(i + 1);
+      track.pop();
+    }
+  }
+  
+  backtrack(0);
+  return res;
+};
+```
+
+## 90. Subsets II
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/subsets-ii)
+
+```js
+const subsetsWithDup = function(nums) {
+  nums.sort();
+  const res = [];
+  const track = [];
+  
+  const backtrack = (start) => {
+    res.push([...track]);
+    for (let i = start; i < nums.length; i++) {
+      if (i > start && nums[i] === nums[i - 1]) {
+        continue;
+      }
+      track.push(nums[i]);
+      backtrack(i + 1);
+      track.pop();
+    }
+  }
+  backtrack(0);
+  return res;
+};
+```
+
+## 46. Permutations
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/permutations)
+
+```js
+const permute = function(nums) {
+  const res = [];
+  const track = [];
+  const used = Array.from({length: nums.length}, _ => false);
+
+  const trackback = () => {
+    if (track.length === nums.length) res.push([...track]);
+    for (let i = 0; i < nums.length; i++) {
+      if (used[i]) continue;
+      used[i] = true;
+      track.push(nums[i]);
+      trackback();
+      track.pop();
+      used[i] = false;
+    }
+  }
+  trackback();
+  return res;
+};
+```
+
+## 47. Permutations II
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/permutations-ii)
+
+```js
+const permuteUnique = function(nums) {
+  nums.sort();
+  const res = [];
+  const track =[];
+  const used = Array.from({length: nums.length}, _ => false);
+  
+  const trackback = () => {
+    if (track.length === nums.length) res.push([...track]);
+    for (let i = 0; i < nums.length; i++) {
+      if (used[i]) continue;
+      if (i > 0 && nums[i] === nums[i - 1] && !used[i-1]) continue;
+      track.push(nums[i]);
+      used[i] = true;
+      trackback();
+      used[i] = false;
+      track.pop();
+    }
+  }
+  
+  trackback();
+  return res;
+};
+```
+
+## 39. Combination Sum
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/combination-sum)
+
+```js
+const combinationSum = function(candidates, target) {
+  const res = [];
+  const track = [];
+  let sum = 0;
+  const trackback = (start) => {
+    if (sum === target) res.push([...track]);
+    if (sum > target) return;
+    for (let i = start; i < candidates.length; i++) {
+      sum += candidates[i];
+      track.push(candidates[i]);
+      trackback(i);
+      track.pop();
+      sum -= candidates[i];
+    }
+  }
+  trackback(0);
+  return res;
+};
+```
+
+## 167. Two Sum II - Input Array Is Sorted
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/two-sum-ii-input-array-is-sorted)
+
+### Hash Table
+
+```js
+const twoSum = function(numbers, target) {
+  const hash = new Map();
+  let first, diff
+  for (let i = 0; i < numbers.length; i++) {
+      first = numbers[i];
+      diff = target - first;
+      if (hash.has(diff)) return [hash.get(diff) + 1, i + 1];
+      hash.set(first, i);
+  }
+  return [];
+};
+```
+
+### Two Pointer
+
+```js
+const twoSum = function(numbers, target) {
+  let left = 0;
+  let right = numbers.length - 1;
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) {
+      return [left + 1, right + 1];
+    } else if (sum < target) {
+      left++;
+    } else {
+      right--;
+    }
+  }
+  return [];
+};
+```
+
+## 15. 3Sum
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/3sum)
+
+### Trackback
+
+```js
+const threeSum = function(nums) {
+
+  const trackback = (start) => {
+    if (track.length === 3) {
+      if (sum === 0) {
+        res.push([...track]);
+      }
+      return;
+    }
+    for (let i = start; i < nums.length; i++){
+      if (i > start && nums[i] === nums[i - 1]) continue;
+      sum += nums[i];
+      track.push(nums[i]);
+      trackback(i + 1);
+      track.pop();
+      sum -= nums[i];
+    }
+  }
+
+  nums.sort();
+  const res = [];
+  const track = [];
+  let sum = 0;
+  trackback(0);
+  return res;
+};
+```
+
+### Two pointer
+
+```js
+const threeSum = function(nums) {
+
+  const twoSum = (index) => {
+    const num = nums[index];
+    let left = index + 1; 
+    let right = nums.length - 1;
+    while (left < right) {
+      const sum = num + nums[left] + nums[right];
+      if (sum === 0) {
+        res.push([num, nums[left], nums[right]]);
+        left++;
+        right--;
+        while (left < right && nums[left] === nums[left - 1]) {
+          left++;
+        }
+      } else if (sum > 0) {
+        right--;
+      } else {
+        left++;
+      }
+    }
+    
+  }
+
+  nums.sort((a, b) => a - b);
+  const res = [];
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] > 0) break;
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    twoSum(i);
+  }
+  return res;
+};
+```
+
+### Hashset
+
+```js
+const threeSum = function(nums) {
+  
+  const twoSum = (index) => {
+    const num = nums[index];
+    const set = new Set();
+    let i = index + 1;
+    while (i < nums.length) {
+      const complement = -1 * num - nums[i];
+      if (set.has(complement)) {
+        res.push([num, nums[i], complement]);
+        while (i + 1 < nums.length && nums[i] === nums[i+1]) {
+          i++;
+        }
+      }
+      set.add(nums[i]);
+      i++;
+    }
+  }
+  
+  nums.sort((a, b) => a - b);
+  const res = [];
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] > 0) break;
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    twoSum(i);
+  }
+  return res;
+};
+```
+
+## 159. Longest Substring with At Most Two Distinct Characters
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/longest-substring-with-at-most-two-distinct-characters)
+
+### Sliding Window
+
+```js
+const lengthOfLongestSubstringTwoDistinct = function(s) {
+  let left = 0;
+  let right = 0;
+  let len = 0;
+  const window = new Map();
+  
+  while (right < s.length) {
+    const char = s[right];
+    right++;
+    
+    window.set(char, (window.get(char) || 0) + 1);
+   
+    while (window.size > 2) {
+      len = Math.max(right - left - 1, len);
+      const d = s[left];
+      left++;
+      if (window.get(d) > 1) {  
+        window.set(d, window.get(d) - 1);
+      } else {
+        window.delete(d);
+      }
+    }
+  }
+  return Math.max(right - left, len);
+};
+```
+
+## 76. Minimum Window Substring
+
+[Problem link (HARD)](https://leetcode.com/problems/minimum-window-substring)
+
+### Sliding Window
+
+```js
+const minWindow = function(s, t) {
+  let left = 0;
+  let right = 0;
+  const window = new Map();
+  let valid = 0;
+  const needed = new Map();
+  for (let char of t) {
+    needed.set(char, (needed.get(char) || 0) + 1);
+  }
+
+  let start = 0;
+  let len = s.length + 1;
+  while (right < s.length) {
+    const char = s[right];
+    right++;
+    if (needed.has(char)) {
+      window.set(char, (window.get(char) || 0) + 1);
+      if (window.get(char) === needed.get(char)) valid++;
+    }
+    while (valid === needed.size) {
+      if (right - left < len) {
+        start = left;
+        len = right - left;
+      }
+      const d = s[left];
+      left++;
+      if (needed.has(d)) {
+        if (window.get(d) === needed.get(d)) valid--;
+        window.set(d, (window.get(d) || 0) -1);
+      }
+    }
+  }
+  return len === s.length + 1 ? "" : s.slice(start, start + len);
+};
+```
+
+## 567. Permutation in String
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/permutation-in-string)
+
+### Sliding Window
+
+```js
+const checkInclusion = function(s1, s2) {
+  let left = 0;
+  let right = 0;
+  let needed = new Map();
+  let window = new Map();
+  let valid = 0;
+  for (let char of s1) {
+    needed.set(char, (needed.get(char) || 0) + 1);
+  }
+  while (right < s2.length) {
+    const char = s2[right];
+    right++;
+    if (needed.has(char)) {
+      window.set(char, (window.get(char) || 0) + 1);
+      if (needed.get(char) === window.get(char)) valid++;
+    }
+    
+    while (right - left === s1.length) {
+      if (valid === needed.size) return true;
+      const d = s2[left];
+      left++;
+      
+      if (needed.has(d)) {
+        if (needed.get(d) === window.get(d)) valid--;
+        window.set(d, window.get(d) - 1);
+      }
+    }
+  }
+  return false;
+};
+```
