@@ -805,7 +805,6 @@ const threeSum = function(nums) {
         left++;
       }
     }
-    
   }
 
   nums.sort((a, b) => a - b);
@@ -896,12 +895,11 @@ const lengthOfLongestSubstringTwoDistinct = function(s) {
 const minWindow = function(s, t) {
   let left = 0;
   let right = 0;
-  const window = new Map();
   let valid = 0;
-  const needed = new Map();
-  for (let char of t) {
-    needed.set(char, (needed.get(char) || 0) + 1);
-  }
+  const window = new Map();
+  const needed = t.split("").reduce((prev, char) => {
+    return prev.set(char, (prev.get(char) || 0) + 1)
+  }, new Map())
 
   let start = 0;
   let len = s.length + 1;
@@ -921,7 +919,7 @@ const minWindow = function(s, t) {
       left++;
       if (needed.has(d)) {
         if (window.get(d) === needed.get(d)) valid--;
-        window.set(d, (window.get(d) || 0) -1);
+        window.set(d, (window.get(d) || 0) - 1);
       }
     }
   }
@@ -939,12 +937,11 @@ const minWindow = function(s, t) {
 const checkInclusion = function(s1, s2) {
   let left = 0;
   let right = 0;
-  let needed = new Map();
-  let window = new Map();
+  const needed = s1.split("").reduce((prev, char) => {
+    return prev.set(char, (prev.get(char) || 0) + 1)
+  }, new Map())
+  const window = new Map();
   let valid = 0;
-  for (let char of s1) {
-    needed.set(char, (needed.get(char) || 0) + 1);
-  }
   while (right < s2.length) {
     const char = s2[right];
     right++;
@@ -965,5 +962,103 @@ const checkInclusion = function(s1, s2) {
     }
   }
   return false;
+};
+```
+
+## 438. Find All Anagrams in a String
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/find-all-anagrams-in-a-string)
+
+### Sliding Window
+
+```js
+const findAnagrams = function(s, p) {
+  const res = [];
+  
+  const needed = p.split("").reduce((prev, char) => {
+    return prev.set(char, (prev.get(char) || 0) + 1)
+  }, new Map())
+  const window = new Map();
+  let valid = 0;
+  let left = 0;
+  let right = 0;
+  while (right < s.length) {
+    const char = s[right];
+    right++;
+    if (needed.has(char)) {
+      window.set(char, (window.get(char) || 0) + 1);
+      if (needed.get(char) === window.get(char)) valid++;
+    }
+    while (right - left === p.length) {
+      if (valid === needed.size) res.push(left);
+      const d = s[left];
+      left++;
+      if (needed.has(d)) {
+        if (needed.get(d) === window.get(d)) valid--;
+        window.set(d, window.get(d) - 1);
+      }
+    }
+  }
+  return res;
+};
+```
+
+## 3. Longest Substring Without Repeating Characters
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/longest-substring-without-repeating-characters)
+
+### Sliding Window
+
+```js
+const lengthOfLongestSubstring = function(s) {
+  const window = new Map();
+  let res = 0;
+  let left = 0;
+  let right = 0;
+  while (right < s.length) {
+    const char = s[right];
+    right++;
+    window.set(char, (window.get(char) || 0) + 1);
+    
+    while (window.get(char) > 1) {  
+      const d = s[left];
+      left++;
+      window.set(d, window.get(d) - 1);
+    }
+    res = Math.max(res, right - left);
+  }
+  return res;
+};
+```
+
+## 1770. Maximum Score from Performing Multiplication Operations
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/maximum-score-from-performing-multiplication-operations)
+
+### Dynamic Programming
+
+```js
+const maximumScore = function(nums, multipliers) {
+  const n = nums.length;
+  const m = multipliers.length;
+  const best = new Array(m + 1).fill(0).map(() => new Array(m + 1).fill(0));
+  
+  for (let i = 1; i <= m; i += 1) {
+    best[i][0] += best[i-1][0] + nums[n-i] * multipliers[i-1];
+    best[0][i] += best[0][i-1] + nums[i-1] * multipliers[i-1];
+  }
+  
+  let max = Math.max(best[m][0], best[0][m]);
+  
+  for (let i = 1; i <= m; i += 1) {
+    for (let j = 1; j <= m - i; j += 1) {
+      best[i][j] = Math.max(
+        best[i-1][j] + nums[n - i] * multipliers[i + j - 1],
+        best[i][j-1] + nums[j - 1] * multipliers[i + j - 1],
+      );
+    }
+    max = Math.max(max, best[i][m-i]);
+  }
+  return max;
 };
 ```
