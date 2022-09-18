@@ -303,6 +303,78 @@ const longestConsecutive = function(root) {
 };
 ```
 
+## 336. Palindrome Pairs
+
+[Problem link (HARD)](https://leetcode.com/problems/palindrome-pairs)
+
+Input and Output:
+
+Input is a array of words; the output is index
+We need a map: word -> index;
+
+Combinations:
+
+1. Case 1: Same length.
+   - "abcd" - "dcba"; "dcba" - "abcd";
+2. Case 2: Left longer:
+   - "s" - "lls" -> "s" - "ll" - "s"
+3. Case 3: Right longer
+   - "sll" - "s" -> "s" - "ll" - "s"
+
+```js
+const isPalindromeBetween = (word, f, b) => {
+  while (f < b) {
+    if (word[f] !== word[b]) return false;
+    f++;
+    b--;
+  }
+  return true;
+}
+
+const getPrefix = (word) => {
+  const pres = [];
+  for (let i = 0; i < word.length; i++) {
+    if (isPalindromeBetween(word, i, word.length - 1)) {
+      pres.push([0, i]);
+    }
+  }
+  return pres;
+}
+
+const getSuffix = (word) => {
+  const suf = [];
+  for (let i = 0; i < word.length; i++) {
+    if (isPalindromeBetween(word, 0, i)) {
+      suf.push([i + 1, word.length]);
+    }
+  }
+  return suf;
+}
+
+
+const palindromePairs = function(words) {
+  const hash = new Map();
+  const res = [];
+  for (let i = 0; i < words.length; i++) {
+    const rev = words[i].split("").reverse().join("");
+    hash.set(rev, i);
+  }
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (hash.has(word) && hash.get(word) !== i) res.push([i, hash.get(word)]);
+    getPrefix(word).forEach(([f, b]) => {
+      const pre = word.slice(f, b);
+      if(hash.has(pre)) res.push([i, hash.get(pre)])
+    })
+    getSuffix(word).forEach(([f, b]) => {
+      const suf = word.slice(f, b);
+      if(hash.has(suf)) res.push([hash.get(suf), i])
+    })
+  }
+  return res;
+};
+```
+
 ## 362. Design Hit Counter
 
 [Problem link (**MEDIUM**)](https://leetcode.com/problems/design-hit-counter)
@@ -1041,24 +1113,398 @@ const lengthOfLongestSubstring = function(s) {
 const maximumScore = function(nums, multipliers) {
   const n = nums.length;
   const m = multipliers.length;
-  const best = new Array(m + 1).fill(0).map(() => new Array(m + 1).fill(0));
+  const dp = new Array(m + 1).fill(0)
+              .map((_, i) => new Array(m + 1 - i).fill(0));
   
   for (let i = 1; i <= m; i += 1) {
-    best[i][0] += best[i-1][0] + nums[n-i] * multipliers[i-1];
-    best[0][i] += best[0][i-1] + nums[i-1] * multipliers[i-1];
+    dp[i][0] += dp[i-1][0] + nums[n-i] * multipliers[i-1];
+    dp[0][i] += dp[0][i-1] + nums[i-1] * multipliers[i-1];
   }
   
-  let max = Math.max(best[m][0], best[0][m]);
+  let max = Math.max(dp[m][0], dp[0][m]);
   
   for (let i = 1; i <= m; i += 1) {
     for (let j = 1; j <= m - i; j += 1) {
-      best[i][j] = Math.max(
-        best[i-1][j] + nums[n - i] * multipliers[i + j - 1],
-        best[i][j-1] + nums[j - 1] * multipliers[i + j - 1],
+      dp[i][j] = Math.max(
+        dp[i-1][j] + nums[n - i] * multipliers[i + j - 1],
+        dp[i][j-1] + nums[j - 1] * multipliers[i + j - 1],
       );
     }
-    max = Math.max(max, best[i][m-i]);
+    max = Math.max(max, dp[i][m-i]);
   }
   return max;
+};
+```
+
+## 322. Coin Change
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/coin-change)
+
+### Dynamic Programming
+
+```js
+const coinChange = function(coins, amount) {
+  const dp = new Array(amount + 1).fill(amount + 1);
+  dp[0] = 0;
+  for (let i = 1; i < amount + 1; i++) {
+    for (let j = 0; j < coins.length; j++) {
+      const rest = i - coins[j];
+      if (rest >= 0) {
+        dp[i] = Math.min(dp[rest] + 1, dp[i]);
+      }
+    }
+  }
+  return dp[amount] === amount + 1 ? -1 : dp[amount];
+};
+```
+
+## 931. Minimum Falling Path Sum
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/minimum-falling-path-sum)
+
+### Dynamic Programming
+
+```js
+const minFallingPathSum = function(matrix) {
+  if (matrix.length === 1) return matrix[0][0];
+  const dp = new Array(matrix.length).fill(0)
+              .map(_ => new Array(matrix.length).fill(Infinity));
+  for (let i = 0; i < matrix.length; i++) {
+    dp[0][i] = Math.min(matrix[0][i], dp[0][i]);
+  }
+  let min = Infinity;
+  for (let i = 1; i < matrix.length; i++) {
+    for (let j = 0; j < matrix.length; j++) {
+      let prev;
+      if (j === 0) prev = Math.min(dp[i-1][j], dp[i-1][j+1]);
+      else if (j === matrix.length - 1) prev = Math.min(dp[i-1][j], dp[i-1][j-1]);
+      else prev = Math.min(dp[i-1][j], dp[i-1][j-1], dp[i-1][j+1])
+      dp[i][j] =  prev + matrix[i][j];
+      if (i === matrix.length - 1) {
+        min = Math.min(dp[i][j], min);
+      }
+    }
+  }
+  return min;
+};
+```
+
+## 300. Longest Increasing Subsequence
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/longest-increasing-subsequence)
+
+### Dynamic Programming
+
+```js
+const lengthOfLIS = function(nums) {
+  const dp = new Array(nums.length).fill(1);
+  let max = 1;
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = 0; j < i; j++) {
+      if (nums[i] > nums[j]) dp[i] = Math.max(dp[j] + 1, dp[i]);      
+    }
+    max = Math.max(max, dp[i]);
+  }
+  return max;
+}
+```
+
+### Binary Search
+
+```js
+const lengthOfLIS = function(nums) {
+  const arr = [];
+  for (let num of nums) {
+    if (arr.length === 0 || num > arr[arr.length - 1]) {
+      arr.push(num);
+      continue;
+    }
+    let left = 0;
+    let right = arr.length - 1;
+    while (left < right) {
+      const mid = Math.floor((left + right) / 2);
+      if (num > arr[mid]) {
+        left = mid + 1;
+      } else if (num <= arr[mid]){
+        right = mid;
+      }
+    }
+    arr[right] = num;
+  }
+  return arr.length;
+}
+```
+
+## 53. Maximum Subarray
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/maximum-subarray)
+
+### Dynamic Programming
+
+```js
+const maxSubArray = function(nums) {
+  let max = nums[0];
+  let prev = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    prev = prev > 0 ? prev + nums[i] : nums[i];
+    max = Math.max(prev, max);
+  }
+  return max;
+};
+```
+
+## 1143. Longest Common Subsequence
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/longest-common-subsequence)
+
+### Dynamic Programming
+
+```js
+const longestCommonSubsequence = function(text1, text2) {
+  const memo = new Array(text1.length).fill(0).map(_ => new Array(text2.length))
+  const dp = (i, j) => {
+    if (i === text1.length || j === text2.length) {
+      return 0;
+    }
+    if (memo[i][j] !== undefined) return memo[i][j];
+    if (text1[i] === text2[j]) {
+      memo[i][j] = dp(i+1, j+1) + 1;
+    } else {
+      memo[i][j] = Math.max(dp(i+1, j), dp(i, j+1));
+    }
+    return memo[i][j];
+  }
+  return dp(0,0);
+};
+```
+
+## 583. Delete Operation for Two Strings
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/delete-operation-for-two-strings)
+
+### Dynamic Programming
+
+```js
+const minDistance = function(word1, word2) {
+  const m = word1.length;
+  const n = word2.length;
+  const memo = new Array(m).fill(0).map(_ => new Array(n));
+  const dp = (i, j) => {
+    if (i === word1.length || j === word2.length) return 0;
+    if (memo[i][j] !== undefined) return memo[i][j];
+    if (word1[i] === word2[j]) {
+      memo[i][j] = dp(i+1, j+1) + 1;
+    } else {
+      memo[i][j] = Math.max(dp(i, j+1), dp(i+1, j));
+    }
+    return memo[i][j];
+  }
+  return m + n - dp(0, 0) * 2;
+};
+```
+
+## 72. Edit Distance
+
+[Problem link(HARD)](https://leetcode.com/problems/edit-distance)
+
+Describe
+
+- word1: horse
+- word2: ros
+
+h !== r:
+
+1. insert -> rhorse
+  dp(i, j+1) + 1;
+2. delete -> orse
+  dp(i+1,j) + 1;
+3. replace -> rorse
+  dp(i+1,j+1) + 1;
+
+r === r:
+
+rorse -> orse;
+  dp(i+1, j+1)
+
+### Dynamic Programming
+
+```js
+const minDistance = function(word1, word2) {
+  const memo = new Array(word1.length).fill(0)
+                .map(_ => new Array(word2.length));
+  const dp = (i, j) => {
+    if (i === word1.length) return word2.length - j;
+    if (j === word2.length) return word1.length - i;
+    if (memo[i][j] !== undefined) return memo[i][j];
+    if (word1[i] === word2[j]) {
+      memo[i][j] = dp(i+1, j+1);
+    } else {
+       memo[i][j] = Math.min(
+        dp(i, j+1) + 1, dp(i+1, j) + 1, dp(i+1, j+1) + 1
+      )
+    }   
+    return memo[i][j];
+  }
+  return dp(0,0);
+};
+```
+
+## 10. Regular Expression Matching
+
+[Problem link (HARD)](https://leetcode.com/problems/regular-expression-matching)
+
+### Dynamic Programming
+
+```js
+const isMatch = function(s, p) {
+  const memo = new Array(s.length).fill(0)
+                .map(_ => new Array(p.length));
+  const dp = (i, j) => {
+    if (j === p.length) return i === s.length
+    if (i === s.length) {
+      const rest = p.slice(j);
+      if (rest.length % 2 === 1) return false;
+      for (let k = 0; k < rest.length; k = k+2) {
+        if (rest[k] === "*" || rest[k+1] !== "*" ) {
+          return false;
+        }
+      }
+      return true;
+    }
+    if (memo[i][j] !== undefined) return memo[i][j];
+    if (s[i] === p[j] || p[j] === ".") {
+      if (j < p.length - 1 && p[j+1] === "*") {
+       memo[i][j] = dp(i, j+2) || dp(i+1, j);
+      } else {
+        memo[i][j] = dp(i+1, j+1);
+      }
+    } else {
+      if (j < p.length - 1 && p[j+1] === "*") {
+        memo[i][j] = dp(i, j+2);
+      } else {
+        memo[i][j] = false;
+      }
+    }
+    return memo[i][j];
+  }
+  return dp(0, 0);
+};
+```
+
+## 518. Coin Change II
+
+### Dynamic Programming
+
+#### Recursion
+
+```js
+const change = function(amount, coins) {
+  const memo = new Array(amount+1).fill(0)
+                .map(_ => new Array(coins.length + 1));
+  const dp = (a, c) => {
+    if (a <= 0) return 1;
+    if (c <= 0) return 0;
+    if (memo[a][c] !== undefined) return memo[a][c];
+    const coin = coins[c-1];
+    let count = a % coin === 0 ? 1 : 0;
+    for (let i = 0; i * coin < a; i++) {
+      count += dp(a - i * coin, c-1);
+    }
+    memo[a][c] = count;
+    return memo[a][c];
+  }
+  return dp(amount, coins.length);
+};
+```
+
+#### Iteration (2D-Array)
+
+```js
+const change = function(amount, coins) {
+  const dp = new Array(amount+1).fill(0)
+                .map(_ => new Array(coins.length + 1).fill(0));
+  for (let j = 0; j < coins.length + 1; j++) {
+    dp[0][j] = 1;
+  }
+  for (let i = 1; i < amount + 1; i++) {
+    for (let j = 1; j < coins.length + 1; j++) {
+      const coin = coins[j-1];
+      if (i - coin >= 0) {
+        dp[i][j] = dp[i][j-1] + dp[i-coin][j];
+      } else {
+        dp[i][j] = dp[i][j-1];
+      } 
+    }
+  }
+  return dp[amount][coins.length];
+};
+```
+
+#### Iteration (1D-Array)
+
+```js
+const change = function(amount, coins) {
+  const dp = new Array(amount+1).fill(0)
+  dp[0] = 1;
+  for (let i = 0; i < coins.length; i++) {
+    for (let j = 1; j < amount + 1; j++) {
+      if (j - coins[i] >= 0) {
+        dp[j] += dp[j-coins[i]];
+      }
+    }
+  }
+  return dp[amount];
+};
+```
+
+## 416. Partition Equal Subset Sum
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/partition-equal-subset-sum)
+
+### Dynamic Programming
+
+#### Iteration (2D-Array)
+
+```js
+const canPartition = function(nums) {
+  const sum = nums.reduce((sum, val)=> sum + val,0);
+  if (sum % 2 !== 0) return false;
+  const target = sum / 2;
+  const dp = new Array(target+1).fill(0).map( _=> new Array(nums.length + 1).fill(false));
+  for (let i = 0; i <= nums.length; i++) {
+    dp[0][i] = true;
+  }
+  for (let i = 1; i <= target; i++) {
+    for (let j = 1; j <= nums.length; j++) {
+      const num = nums[j];
+      if (i - num >= 0) {
+        dp[i][j] = dp[i][j-1] || dp[i-num][j-1];
+      } else {
+         dp[i][j] = dp[i][j-1]
+      }
+    }
+  }
+  return dp[target][nums.length]
+};
+```
+
+#### Iteration (1D-Array)
+
+```js
+const canPartition = function(nums) {
+  const sum = nums.reduce((sum, val)=> sum + val,0);
+  if (sum % 2 !== 0) return false;
+  const target = sum / 2;
+  const dp = new Array(target+1).fill(false);
+  dp[0] = true;
+  for (let i = 0; i < nums.length; i++) {
+    const num = nums[i];
+    for (let j = target; j >=0; j--) {
+      if (j - num >= 0) {
+        dp[j] = dp[j] || dp[j-num];
+      } 
+    }   
+  }
+  return dp[target]
 };
 ```
