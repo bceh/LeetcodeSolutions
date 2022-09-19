@@ -442,6 +442,31 @@ var tree2str = function(root) {
 };
 ```
 
+## 609. Find Duplicate File in System
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/find-duplicate-file-in-system)
+
+### HashMap
+
+```js
+const findDuplicate = function(paths) {
+  const hash = new Map();
+  for (let path of paths) {
+    const rf = path.split(' ');
+    const root = rf[0];
+    const files = rf.slice(1);
+    for (let file of files) {
+      const nc = file.split('(');
+      const name = nc[0];
+      const content = nc[1].split(')')[0];
+      const p = `${root}/${name}`;
+      hash.has(content) ? hash.get(content).push(p) : hash.set(content, [p]);
+    }
+  }
+  return [...hash.values()].filter(arr=>arr.length > 1);
+};
+```
+
 ## 814. Binary Tree Pruning
 
 [Problem link](https://leetcode.com/problems/binary-tree-pruning)
@@ -1506,5 +1531,316 @@ const canPartition = function(nums) {
     }   
   }
   return dp[target]
+};
+```
+
+## 121. Best Time to Buy and Sell Stock
+
+[Problem link(EASY)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock)
+
+### Array
+
+```js
+const maxProfit = function(prices) {
+  const n = prices.length
+  const buy = new Array(n);
+  const sell = new Array(n);
+  buy[0] = prices[0];
+  sell[n-1] = prices[n-1];
+  let profit = prices[n-1] - prices[0];
+  for (let i = 1; i < n; i++) {
+    buy[i] = Math.min(buy[i-1], prices[i]);
+  }
+  for (let i = n - 2; i >= 0; i--) {
+    sell[i] = Math.max(sell[i+1], prices[i]);
+    profit = Math.max(sell[i] - buy[i], profit);
+  }
+  return profit;
+};
+```
+
+### One pass
+
+```js
+const maxProfit = function(prices) {
+  let profit = 0;
+  let min_price = prices[0];
+  for (let i = 1; i <  prices.length; i++) {
+    profit = Math.max(prices[i] - min_price, profit);
+    min_price = Math.min(prices[i], min_price);
+  }
+  return profit;
+};
+```
+
+### State Machine
+
+```js
+const maxProfit = function(prices) {
+  let sell = 0; 
+  let buy = -1 * prices[0];
+  for (let i = 1; i <  prices.length; i++) {
+    sell = Math.max(sell, buy + prices[i]);
+    buy = Math.max(buy, -1 * prices[i]);
+  }
+  return sell;
+};
+```
+
+### Dynamic Programming
+
+#### Iteration (2-D Array)
+
+```js
+const maxProfit = function(prices) {
+  const n = prices.length;
+  const dp = new Array(n).fill(0).map(_=>new Array(2));
+  dp[0][0] = 0;
+  dp[0][1] = -1 * prices[0];
+  for (let i = 1; i <  n; i++) {
+    dp[i][0] = Math.max(dp[i-1][0], dp[i-1][1] + prices[i]);
+    dp[i][1] = Math.max(dp[i-1][1], -1 * prices[i]);
+  }
+  return dp[n-1][0];
+};
+```
+
+## 122. Best Time to Buy and Sell Stock II
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii)
+
+### State Machine
+
+```js
+const maxProfit = function(prices) {
+  let buy = -1 * prices[0];
+  let sell = 0;
+  for (let i = 1; i < prices.length; i++) {
+    const last_buy = buy;
+    buy = Math.max(buy, sell - prices[i]);
+    sell = Math.max(sell, last_buy + prices[i]);
+  }
+  return sell;
+};
+```
+
+## 123, Best Time to Buy and Sell Stock III
+
+[Problem link(HARD)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii)
+
+### State Machine
+
+```js
+const maxProfit = function(prices) {
+  let buy_f = -1*prices[0];
+  let sell_f = -Infinity;
+  let buy_s = -Infinity;
+  let sell_s = -Infinity;
+  
+  for (let i = 1; i < prices.length; i++) {
+    sell_s = Math.max(sell_s, buy_s + prices[i])
+    buy_s = Math.max(buy_s, sell_f - prices[i]);
+    sell_f = Math.max(sell_f, buy_f + prices[i]);
+    buy_f = Math.max(buy_f, -1 * prices[i]);
+  }
+  return Math.max(0, sell_f, sell_s);
+};
+```
+
+## 188. Best Time to Buy and Sell Stock IV
+
+[Problem link(HARD)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv)
+
+### Dynamic Programming
+
+#### Iteration (3-D Array)
+
+```js
+const maxProfit = function(k, prices) {
+  const dp = new Array(prices.length+1).fill(0)
+              .map(_ => new Array(2*k+1).fill(0)
+                  .map(_ => new Array(2).fill(-Infinity)));
+  for (let i = 0; i <= prices.length; i++) {
+    dp[i][0][0] = 0;
+  }
+  for (let j = 0; j <= 2*k; j++) {
+    dp[0][j][0] = 0;
+  }
+  
+  for (let i = 1; i <= prices.length; i++) {
+    for (let j = 1; j <= 2*k; j++) {
+      dp[i][j][0] = Math.max(dp[i-1][j][0], dp[i-1][j-1][1]+prices[i-1]);
+      dp[i][j][1] = Math.max(dp[i-1][j][1], dp[i-1][j-1][0]-prices[i-1]);
+    }
+  }
+  return dp[prices.length][2*k][0];
+};
+```
+
+## 309. Best Time to Buy and Sell Stock with Cooldown
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown)
+
+### State Machine
+
+```js
+const maxProfit = function(prices) {
+  let buy = -prices[0];
+  let sell = 0;
+  let pre_sell = 0;
+  for (let i = 1; i < prices.length; i++) {
+    const temp = sell;
+    sell = Math.max(sell, buy + prices[i]);
+    buy = Math.max(buy, pre_sell - prices[i]);
+    pre_sell = temp;
+  }
+  return Math.max(0, pre_sell, sell);
+};
+```
+
+## 714. Best Time to Buy and Sell Stock with Transaction Fee
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee)
+
+### State machine
+
+```js
+const maxProfit = function(prices, fee) {
+  let buy = -prices[0];
+  let sell = 0;
+  for (let i = 1; i< prices.length; i++) {
+    const temp = buy;
+    buy = Math.max(buy, sell - prices[i]);
+    sell = Math.max(sell, temp + prices[i] - fee);
+  }
+  return Math.max(0, sell);
+};
+```
+
+## 198. House Robber
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/house-robber)
+
+### Dynamic Programming
+
+#### Iteration (2-D Array)
+
+```js
+const rob = function(nums) {
+  const dp = new Array(nums.length).fill(0).map(_=>new Array(2));
+  dp[0][0] = nums[0];
+  dp[0][1] = 0;
+  for (let i = 1; i < nums.length; i++) {
+    dp[i][0] = dp[i-1][1] + nums[i];
+    dp[i][1] = Math.max(dp[i-1][1], dp[i-1][0]);
+  }
+  return Math.max(...dp[nums.length-1])
+};
+```
+
+#### Iteration (State Compression)
+
+```js
+const rob = function(nums) {
+  let rob = nums[0];
+  let no_rob = 0;
+  for (let i = 1; i < nums.length; i++) {
+    const last_rob = rob;
+    rob = no_rob + nums[i];
+    no_rob = Math.max(last_rob, no_rob);
+  }
+  return Math.max(rob, no_rob)
+};
+```
+
+## 213. House Robber II
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/house-robber-ii)
+
+### Dynamic Programming (State Compression)
+
+```js
+const rob = function(nums) {
+  let f_rob_0 = nums[0];
+  let f_rob_1 = 0;
+  let f_no_rob_0 = 0;
+  let f_no_rob_1 = 0;
+  
+  for (let i = 1; i < nums.length - 1; i++) {
+    const f_rob_last = f_rob_0;
+    const f_no_rob_last = f_no_rob_0;
+    f_rob_0 = f_rob_1 + nums[i];
+    f_rob_1 = Math.max(f_rob_1, f_rob_last);
+    f_no_rob_0 = f_no_rob_1 + nums[i];
+    f_no_rob_1 = Math.max(f_no_rob_1, f_no_rob_last);
+  }
+  return Math.max(f_rob_0, f_rob_1, f_no_rob_0, f_no_rob_1 + nums.at(-1))
+};
+```
+
+## 337. House Robber III
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/house-robber-iii)
+
+### Dynamic Programming
+
+#### Recursion with memo
+
+```js
+const rob = function(root) {
+  const memo = new Map();
+  const traverse = (root) => {
+    if (!root) return 0;
+    if (memo.has(root)) {
+      return memo.get(root);
+    }
+    const rob_left = root.left ? traverse(root.left.left) + traverse(root.left.right) : 0;
+    const rob_right = root.right ? traverse(root.right.left) + traverse(root.right.right) : 0;
+    const rob = rob_left + rob_right + root.val;
+    const no_rob = traverse(root.left) + traverse(root.right);
+    const res = Math.max(rob, no_rob);
+    memo.set(root, res)
+    return res;
+  }
+  return traverse(root);
+};
+```
+
+#### Recursion without memo
+
+```js
+const rob = function(root) {
+  const traverse = (root) => {
+    if (!root) return [0, 0];
+    const left = traverse(root.left);
+    const right = traverse(root.right);
+    const rob = root.val + left[1] + right[1];
+    const no_rob = Math.max(...left) + Math.max(...right);
+    return [rob, no_rob];
+  }
+  return Math.max(...traverse(root));
+};
+```
+
+## 877. Stone Game
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/stone-game)
+
+### Dynamic Programming
+
+```js
+const stoneGame = function(piles) {
+  const n = piles.length;
+  const memo = Array(n).fill(0).map(() => Array(n));
+  const dp = (i, j) => {
+    if (memo[i][j] !== undefined) return memo[i][j];
+    if (j - i === 1) {
+      memo[i][j] = Math.abs(piles[i] - piles[j]);
+    } else {
+      memo[i][j] = Math.max(piles[i] - dp(i+1, j), piles[j] - dp(i, j-1));
+    }
+    return memo[i][j];
+  }
+  return dp(0, n-1) > 0;
 };
 ```
