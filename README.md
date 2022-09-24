@@ -169,6 +169,172 @@ const longestCommonPrefix = function(strs) {
 };
 ```
 
+## 17. Letter Combinations of a Phone Number
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/letter-combinations-of-a-phone-number)
+
+### Backtracking
+
+```js
+const letterCombinations = function(digits) {
+  const map = new Map(Object.entries({
+    "2": "abc", "3": "def", "4": "ghi", "5": "jkl", 
+    "6": "mno", "7": "pqrs", "8": "tuv", "9": "wxyz"
+  }));
+  const res = [];
+  const trackback = (strArr, level) => {
+    if (level === digits.length) {
+      if (level > 0) res.push(strArr.join(''));
+      return;
+    }
+    for (let char of map.get(digits[level])) {
+      strArr.push(char);
+      trackback(strArr, level + 1);
+      strArr.pop();
+    }
+  }
+  trackback([], 0);
+  return res;
+};
+```
+
+## 22. Generate Parentheses
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/generate-parentheses)
+
+### Backtracking
+
+```js
+const generateParenthesis = function(n) {
+  const res = [];
+  const backtrack = (open, close, track) => {
+    if (track.length === 2*n) {
+      res.push(track.join(''));
+      return;
+    } 
+    if (open < n) {
+      track.push('(');
+      backtrack(open+1, close, track);
+      track.pop();
+    } 
+    if (close < open) {
+      track.push(')');
+      backtrack(open, close+1, track);
+      track.pop();
+    }
+  }
+  backtrack(0, 0, []);
+  return res;
+};
+```
+
+### Recursion
+
+```js
+const generateParenthesis = function(n) {
+  const res = [];
+  const backtrack = (open, close, str) => {
+    if (str.length === 2*n) {
+      res.push(str);
+      return;
+    } 
+    if (open < n) {
+      backtrack(open+1, close, str + '(');
+    } 
+    if (close < open) {
+      backtrack(open, close+1, str + ')');
+    }
+  }
+  backtrack(0, 0, '');
+  return res;
+};
+```
+
+## 23. Merge k Sorted Lists
+
+[Problem link(HARD)](https://leetcode.com/problems/merge-k-sorted-lists)
+
+### Compare one by one
+
+```js
+const mergeKLists = function(lists) {
+  const dump = new ListNode();
+  const getMinNode = () => {
+    let min = Infinity;
+    let nodeIndex;
+    for (let i = 0; i < lists.length; i++) {
+      if (lists[i] !== null && lists[i].val < min) {
+        min = lists[i].val;
+        nodeIndex = i;
+      }
+    }
+    let minNode;
+    if (nodeIndex !== undefined) {
+      minNode = lists[nodeIndex];
+      lists[nodeIndex] = lists[nodeIndex].next;
+    }
+    return minNode;
+  }
+  let pointer = dump;
+  let minNode = getMinNode();
+  
+  while(minNode) {
+    pointer.next = minNode;
+    pointer = pointer.next;
+    minNode = getMinNode();
+  }
+  return dump.next;
+};
+```
+
+### Divide and conquer
+
+```js
+const mergeKLists = function(lists) {
+  if(lists.length === 0) return null;
+  const mergeTwo = (a, b) => {
+    const dumb = new ListNode(0);
+    let current = dumb;
+    while(a !== null && b !== null) {
+      if(a.val < b.val) {
+        current.next = a;
+        a = a.next;
+      } else {
+        current.next = b;
+        b = b.next;
+      }
+      current = current.next;
+    }
+    current.next = a || b;
+    return dumb.next;
+  }
+  while(lists.length > 1) { 
+    const a = lists.shift();
+    const b = lists.shift();
+    const mergeAll = mergeTwo(a, b);
+    lists.push(mergeAll);
+  }
+  return lists[0];
+};
+```
+
+## 28. Find the Index of the First Occurrence in a String
+
+```js
+const strStr = function(haystack, needle) {
+  for (let i = 0; i < haystack.length; i++) {
+    if (haystack.slice(i).startsWith(needle)) return i;
+  }
+  return -1;
+};
+```
+
+```js
+const strStr = function(haystack, needle) {
+  return haystack.indexOf(needle)
+};
+```
+
 ## 42. Trapping Rain Water
 
 [Problem link](https://leetcode.com/problems/trapping-rain-water)
@@ -255,6 +421,28 @@ var inorderTraversal = function(root, ans = []) {
 
 Time Complexity - O(N);
 Space Complexity - O(1);
+
+## 113. Path Sum II
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/path-sum-ii)
+
+```js
+const pathSum = function(root, targetSum) {
+  const res = [];
+  const trackback = (root, track, sum) => {
+    if (!root) return;
+    track.push(root.val);
+    sum += root.val;
+    if (root.left === null && root.right === null && sum === targetSum) res.push([...track]);
+    if (root.left !== null) trackback(root.left, track, sum);
+    if (root.right !== null) trackback(root.right, track, sum);
+    sum -= root.val;
+    track.pop();
+  }
+  trackback(root, [], 0);
+  return res;
+};
+```
 
 ## 200. Number of Islands
 
@@ -554,6 +742,31 @@ const verticalTraversal = function(root) {
     result.push(currentCol);
   }
   return result;
+};
+```
+
+## 1272. Remove Interval
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/remove-interval)
+
+```js
+const removeInterval = function(intervals, toBeRemoved) {
+  const [left, right] = toBeRemoved;
+  for (let i = 0; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    if (start >= left && end <= right) {
+      intervals.splice(i, 1);
+      i--;
+    } else if (start < left && end > right) {
+      intervals.splice(i, 1, [start, left], [right, end]);
+      i++;
+    }else if (start < left && end > left) {
+      intervals[i][1] = left;
+    } else if (start < right && end > right) {
+      intervals[i][0] = right;
+    } 
+  }
+  return intervals
 };
 ```
 
@@ -1278,6 +1491,54 @@ const maxSubArray = function(nums) {
 };
 ```
 
+## 718. Maximum Length of Repeated Subarray
+
+[Problem link (MEDIUM)](https://leetcode.com/problems/maximum-length-of-repeated-subarray)
+
+### Dynamic Programming
+
+#### Iteration
+
+```js
+const findLength = function(nums1, nums2) {
+  const dp = new Array(nums1.length+1).fill(0)
+                .map(_ => new Array(nums2.length+1).fill(0));
+  let res = 0;
+  for (let i = 0; i < nums1.length; i++) {
+    for (let j = 0; j < nums2.length; j++) {
+      if (nums1[i] === nums2[j]) dp[i+1][j+1] = dp[i][j] + 1;
+      res = Math.max(dp[i+1][j+1], res);
+    }
+  }
+  return res;
+};
+```
+
+#### Recursion
+
+```js
+const findLength = function(nums1, nums2) {
+  const memo = new Array(nums1.length).fill(0)
+                .map(_ => new Array(nums2.length));
+  let res = 0;
+  const dp = (i, j) => {
+    if (i === nums1.length || j === nums2.length) return 0;
+    if (memo[i][j] !== undefined) return memo[i][j];
+    let count = 0;
+    if (nums1[i] === nums2[j]) {
+      count = 1 + dp(i+1, j+1);
+      res = Math.max(res, count);
+    }
+    dp(i+1, j);
+    dp(i, j+1);
+    memo[i][j] = count;
+    return memo[i][j];
+  }
+  dp(0, 0);
+  return res;
+};
+```
+
 ## 1143. Longest Common Subsequence
 
 [Problem link(MEDIUM)](https://leetcode.com/problems/longest-common-subsequence)
@@ -1842,5 +2103,30 @@ const stoneGame = function(piles) {
     return memo[i][j];
   }
   return dp(0, n-1) > 0;
+};
+```
+
+## 64. Minimum Path Sum
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/minimum-path-sum)
+
+### Dynamic Programming
+
+```js
+const minPathSum = function(grid) {
+  const m = grid.length;
+  const n = grid[0].length;
+  for (let i = 1; i < m; i++) {
+    grid[i][0] += grid[i-1][0];
+  }
+  for (let i = 1; i < n; i++) {
+      grid[0][i] += grid[0][i-1];
+  }
+  for (let i = 0; i < m; i++) {
+    for (let j = 1; j < n; j++) {
+      grid[i][j] += Math.min(grid[i-1][j], grid[i][j-1]);
+    }
+  }
+  return grid[m-1][n-1];
 };
 ```
