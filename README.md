@@ -672,6 +672,44 @@ const pruneTree = function(root) {
 };
 ```
 
+## 838. Push Dominoes
+
+[Problem link(MEDIUM)](https://leetcode.com/problems/push-dominoes)
+
+### Two Pointer
+
+```js
+const pushDominoes = function(dominoes) {
+  const arr = ('L' + dominoes + 'R').split('');
+  let left = 0;
+  let right = 1;
+  while (left < arr.length) {
+    while (arr[right] === '.') {
+      right++;
+    }
+    if (arr[right] === arr[left]) {
+      for (left; left < right; left++) {
+        arr[left] = arr[right];
+      }
+    } else if (arr[left] > arr[right]) {
+      let start = left+1;
+      let end = right-1;
+      while (start < end) {
+        arr[start] = 'R';
+        arr[end] = 'L';
+        start++;
+        end--;
+      }
+      left = right;
+    } else {
+      left = right;
+    }
+    right++;
+  }
+  return arr.slice(1, arr.length-1).join('');
+}
+```
+
 ## 967. Numbers With Same Consecutive Differences
 
 [Problem link](https://leetcode.com/problems/numbers-with-same-consecutive-differences)
